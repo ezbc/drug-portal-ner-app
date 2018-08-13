@@ -9,19 +9,19 @@ RUN apt-get update && \
     apt-get clean && \
     rm /var/lib/apt/lists/*_*
 
-FROM gcr.io/drug-portal/ner-model/1.0.0 as model
-COPY --build model ner .
-
 RUN pip3 install \
 	Flask==0.12.2 \
-	flask-cors==3.0.3 \
 	gunicorn==19.7.1 \
 	six==1.11.0 \
 	pyyaml==3.12 \
 	requests==2.18.4 \
 	spacy==2.0.12
 
+FROM gcr.io/drug-portal/ner-model/1.0.0 as model
+
 ADD . /app
 WORKDIR /app
+
+COPY --from=model ner /app
 
 ENTRYPOINT ["gunicorn", "-b", ":8080", "main:app"]
