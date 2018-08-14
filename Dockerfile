@@ -2,6 +2,8 @@
 # and various os-level packages to allow installation of popular Python
 # libraries. The source is on github at:
 #   https://github.com/GoogleCloudPlatform/python-docker
+FROM gcr.io/drug-portal/spacy/models/drug:1.0.0 as models
+
 FROM gcr.io/google_appengine/python
 
 RUN apt-get update && \
@@ -17,11 +19,11 @@ RUN pip3 install \
 	requests==2.18.4 \
 	spacy==2.0.12
 
-FROM gcr.io/drug-portal/ner-model/1.0.0 as model
+COPY --from=models /models /app/models
 
 ADD . /app
 WORKDIR /app
 
-COPY --from=model ner /app
+RUN ls ./
 
 ENTRYPOINT ["gunicorn", "-b", ":8080", "main:app"]

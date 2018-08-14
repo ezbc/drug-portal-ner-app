@@ -1,0 +1,11 @@
+version: '3'
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: drug-app:1.0.0
+    container_name: drug-portal-ner
+    hostname: app
+    ports:
+      - 8085:8080
