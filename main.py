@@ -22,7 +22,7 @@ import base64
 import json
 import logging
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from six.moves import http_client
 from drugner import DrugNER
 
@@ -40,14 +40,25 @@ def _base64_decode(encoded_str):
         encoded_str += b'=' * num_missed_paddings
     return base64.b64decode(encoded_str).decode('utf-8')
 
+@app.route('/')
+def index():
+    return render_template('index.html')
+
 @app.route('/echo', methods=['POST'])
 def echo():
     """Simple echo service."""
     message = request.get_json().get('message', '')
     return jsonify({'message': message})
 
-
 @app.route('/ner/drug', methods=['POST'])
+def ner():
+    """Identify FDA adverse events from text"""
+    text = request.form.get('text')
+    response = nerModel.evaluate(text)
+
+    return render_template('index.html', entities=response)
+
+@app.route('/ner/drug/json', methods=['POST'])
 def ner():
     """Identify FDA adverse events from text"""
     text = request.get_json().get('text', '')
