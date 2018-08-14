@@ -23,7 +23,6 @@ import json
 import logging
 
 from flask import Flask, jsonify, request
-from flask_cors import cross_origin
 from six.moves import http_client
 from drugner import DrugNER
 
@@ -32,7 +31,7 @@ import drugner
 app = Flask(__name__)
 
 # Load model 
-nerModel = DrugNER('drug', './ner/drug/')
+nerModel = DrugNER('drug', './models/drug/')
 
 def _base64_decode(encoded_str):
     # Add paddings manually if necessary.
@@ -47,12 +46,14 @@ def echo():
     message = request.get_json().get('message', '')
     return jsonify({'message': message})
 
+
 @app.route('/ner/drug', methods=['POST'])
 def ner():
     """Identify FDA adverse events from text"""
     text = request.get_json().get('text', '')
     response = nerModel.evaluate(text)
     return jsonify(response)
+
 
 @app.errorhandler(http_client.INTERNAL_SERVER_ERROR)
 def unexpected_error(e):
