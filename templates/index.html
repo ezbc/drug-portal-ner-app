@@ -16,16 +16,31 @@
 <!doctype html>
 <html>
 <head>
-  <h1>Drug Adverse Event text named entity recognition</h1>
+  <h1>Drug Adverse Event Named Entity Recognition</h1>
 </head>
 <body>
 <!-- [START form] -->
-<form method="post" action="/ner/drug">
-  <input type="text" name="text" placeholder='{"text": "Assess the patients pulse and blood pressure before and intermittently for 30 minutes after AdreView administration"'>
+<h2> Description </h2>
+<div style="width:400px">
+
+	<p> Drug adverse events are reported as unstructured notes by physicians when a patient is experiencing complications from one or more drugs. The physician submits the report which ends up to the drug manufacturers. The drug manufacturers must then code the physician's report for side effects.
+	</p>
+
+	<p> This demo uses an entity extraction model trained with the Python spacy library to reduce the time spent manufacturers code adverse event reports. For more details visit this blog post describing the app:</p>
+
+	<a href="https://ezbc.me/2018/08/07/drug-adverse-event-entity-extraction">https://ezbc.me/2018/08/07/drug-adverse-event-entity-extraction</a>
+
+</div>
+
+<h2>Submit your adverse event description here</h2>
+<form method="post" action="/ner/drug" >
+
+	<textarea name="text" rows="20" cols="100" wrap="soft" maxlength="2000">{{ input }}</textarea>
   <input type="submit" name="submit" value="Submit">
 </form>
 {% if entities %}
-	<p> entities </p>
+  <h2>Results:</h2>
+	<p> {{ entities }} </p>
 {% endif %}
 <!-- [END form] -->
 </body>

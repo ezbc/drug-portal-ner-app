@@ -4,7 +4,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    image: drug-app:1.0.0
+    image: drug-app:1.0.1
     container_name: drug-portal-ner
     hostname: app
     ports:

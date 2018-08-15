@@ -33,6 +33,8 @@ app = Flask(__name__)
 # Load model 
 nerModel = DrugNER('drug', './models/drug/')
 
+PLACEHOLDER_TEXT = '''LABA, such as vilanterol, one of the active ingredients in BREO ELLIPTA, increase the risk of asthma-related death. Currently available data are inadequate to determine whether concurrent use of inhaled corticosteroids or other long-term asthma control drugs mitigates the increased risk of asthma-related death from LABA. Available data from controlled clinical trials suggest that LABA increase the risk of asthma-related hospitalization in pediatric and adolescent patients. Data from a large placebo-controlled US trial that compared the safety of another LABA (salmeterol) or placebo added to usual asthma therapy showed an increase in asthma-related deaths in subjects receiving salmeterol.  [See Warnings and Precautions (5.1).]'''
+
 def _base64_decode(encoded_str):
     # Add paddings manually if necessary.
     num_missed_paddings = 4 - len(encoded_str) % 4
@@ -42,7 +44,7 @@ def _base64_decode(encoded_str):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', input=PLACEHOLDER_TEXT)
 
 @app.route('/echo', methods=['POST'])
 def echo():
@@ -56,10 +58,10 @@ def ner():
     text = request.form.get('text')
     response = nerModel.evaluate(text)
 
-    return render_template('index.html', entities=response)
+    return render_template('index.html', entities=response, input=text)
 
-@app.route('/ner/drug/json', methods=['POST'])
-def ner():
+@app.route('/ner/drug.json', methods=['POST'])
+def nerJson():
     """Identify FDA adverse events from text"""
     text = request.get_json().get('text', '')
     response = nerModel.evaluate(text)
