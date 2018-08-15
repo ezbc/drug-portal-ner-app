@@ -19,7 +19,7 @@ RUN pip3 install \
 	requests==2.18.4 \
 	spacy==2.0.12
 
-COPY --from=models /models /app/models
+COPY --from=models /models /models
 
 ADD . /app
 WORKDIR /app

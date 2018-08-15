@@ -31,7 +31,7 @@ import drugner
 app = Flask(__name__)
 
 # Load model 
-nerModel = DrugNER('drug', './models/drug/')
+nerModel = DrugNER('drug', '/models/drug/')
 
 PLACEHOLDER_TEXT = '''LABA, such as vilanterol, one of the active ingredients in BREO ELLIPTA, increase the risk of asthma-related death. Currently available data are inadequate to determine whether concurrent use of inhaled corticosteroids or other long-term asthma control drugs mitigates the increased risk of asthma-related death from LABA. Available data from controlled clinical trials suggest that LABA increase the risk of asthma-related hospitalization in pediatric and adolescent patients. Data from a large placebo-controlled US trial that compared the safety of another LABA (salmeterol) or placebo added to usual asthma therapy showed an increase in asthma-related deaths in subjects receiving salmeterol.  [See Warnings and Precautions (5.1).]'''
 
@@ -82,4 +82,4 @@ def unexpected_error(e):
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
-    app.run(host='127.0.0.1', port=8080, debug=False)
+    app.run(host='127.0.0.1', port=8080, debug=True)

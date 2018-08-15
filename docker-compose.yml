@@ -4,8 +4,11 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    image: drug-app:1.0.1
+    image: drug-app:1.0.3
     container_name: drug-portal-ner
     hostname: app
     ports:
       - 8085:8080
+    #volumes:
+      #- ./:/app
+    entrypoint: /bin/bash -c "gunicorn --reload -b :8080 main:app && echo test && tail /dev/null"
