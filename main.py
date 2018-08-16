@@ -91,7 +91,11 @@ drug-portal-ner |  [656 662]]
         print(annotations)
 
         def build_annotation_block(text, label):
-            return {'text': text, 'label': label}
+            if label is not None:
+                text_class = label.lower().replace(" ", "")
+            else:
+                text_class = None
+            return {'text': text, 'label': label, 'class': text_class}
 
 
         # initialize
@@ -100,7 +104,7 @@ drug-portal-ner |  [656 662]]
         annotating = False
         annotated_loc = 0
         for i, char in enumerate(text):
-            if i >= locs[annotated_loc, 0] and i <= locs[annotated_loc, 1]:
+            if locs.shape[0] > 0  and i >= locs[annotated_loc, 0] and i <= locs[annotated_loc, 1]:
                 # if we should continue annotating add the character
                 if i == locs[annotated_loc, 1]:
                     # finished label, add text block
@@ -128,7 +132,7 @@ drug-portal-ner |  [656 662]]
     annotated_text = annotate_text(entities['entities'], text)
 
     print(annotated_text)
-    
+
 
     return render_template('index.html',
             input=text,
