@@ -21,7 +21,7 @@ various authentication methods.
 import base64
 import json
 import logging
-
+import numpy as np
 from flask import Flask, jsonify, request, render_template
 from six.moves import http_client
 from drugner import DrugNER
@@ -48,18 +48,92 @@ def index():
 
     """Identify FDA adverse events from text"""
     # TODO: change variable scops in conditionals
-    input_text = request.form.get('text')
-    if (input_text is None):
-        response = None
+    if request.method == 'POST':
+        input_text = request.form.get('text')
+        if input_text == PLACEHOLDER_TEXT:
+            entities = PLACEHOLDER_RESPONSE
+            text = input_text
+        else:
+            entities = nerModel.evaluate(input_text)
+            text = input_text
+    elif request.method == 'GET':
+        entities = None
         text = PLACEHOLDER_TEXT
-    elif (input_text == PLACEHOLDER_TEXT):
-        response = PLACEHOLDER_RESPONSE
-        text = input_text
-    else:
-        response = nerModel.evaluate(input_text)
-        text = input_text
 
-    return render_template('index.html', entities=response, input=text)
+
+    # {'entities': [{'text': 'death', 'start_char': 109,
+    #  'end_char': 114, 'label': 'AdverseReaction'}]}
+    '''
+drug-portal-ner | {'text': 'death', 'start_char': 109, 'end_char': 114, 'label': 'AdverseReaction'}
+drug-portal-ner | {'text': 'corticosteroids', 'start_char': 203, 'end_char': 218, 'label': 'DrugClass'}
+drug-portal-ner | {'text': 'death', 'start_char': 306, 'end_char': 311, 'label': 'AdverseReaction'}
+drug-portal-ner | {'text': 'LABA', 'start_char': 317, 'end_char': 321, 'label': 'DrugClass'}
+drug-portal-ner | {'text': 'LABA', 'start_char': 560, 'end_char': 564, 'label': 'DrugClass'}
+drug-portal-ner | {'text': 'deaths', 'start_char': 656, 'end_char': 662, 'label': 'AdverseReaction'}
+drug-portal-ner | [[109 114]
+drug-portal-ner |  [203 218]
+drug-portal-ner |  [306 311]
+drug-portal-ner |  [317 321]
+drug-portal-ner |  [560 564]
+drug-portal-ner |  [656 662]]
+    '''
+
+    def annotate_text(annotations, text):
+        response = {}
+
+        locs = np.empty((len(annotations), 2), dtype=np.int16)
+        for i, annotation in enumerate(annotations):
+            print(annotation)
+            locs[i, :] = (annotation['start_char'], annotation['end_char'])
+        locs = np.sort(locs, axis=0)
+
+        annotations.sort(key=lambda x: x['start_char'])
+        print(annotations)
+
+        def build_annotation_block(text, label):
+            return {'text': text, 'label': label}
+
+
+        # initialize
+        annotated_text = []
+        text_block = ''
+        annotating = False
+        annotated_loc = 0
+        for i, char in enumerate(text):
+            if i >= locs[annotated_loc, 0] and i <= locs[annotated_loc, 1]:
+                # if we should continue annotating add the character
+                if i == locs[annotated_loc, 1]:
+                    # finished label, add text block
+                    block = build_annotation_block(text_block, annotations[annotated_loc]['label'])
+                    annotated_text.append(block)
+                    annotating = False
+                    text_block = ''
+                    text_block += char
+                    if (annotated_loc < locs.shape[0] - 1):
+                        annotated_loc += 1
+                elif i == locs[annotated_loc, 0]:
+                    # starting label, add text block
+                    block = build_annotation_block(text_block, None)
+                    annotated_text.append(block)
+                    text_block = ''
+                    text_block += char
+                else:
+                    annotating = True
+                    text_block += char
+            else:
+                text_block += char
+
+        print(annotated_text)
+
+
+
+        return locs
+
+    annotated_text = annotate_text(entities['entities'], text)
+
+    return render_template('index.html',
+            input=text,
+            annotated_text=annotated_text)
 
 @app.route('/echo', methods=['POST'])
 def echo():
