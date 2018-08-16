@@ -1,6 +1,12 @@
 
-{% if entities %}
+{% if annotated_text %}
   <h2>Results:</h2>
-  {{ annotated_text }}
+  {% for block in annotated_text %}
+    {% if block.label %}
+      <span class="highlight" data-toggle="popover" data-placement="top" data-content="{{ block.label }}">
+       {{ block.text }}
+      </span>
+    {% endif %}
+  {% endfor %}
   <p> {{ entities }} </p>
 {% endif %}

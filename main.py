@@ -123,13 +123,12 @@ drug-portal-ner |  [656 662]]
             else:
                 text_block += char
 
-        print(annotated_text)
-
-
-
-        return locs
+        return annotated_text
 
     annotated_text = annotate_text(entities['entities'], text)
+
+    print(annotated_text)
+    
 
     return render_template('index.html',
             input=text,
