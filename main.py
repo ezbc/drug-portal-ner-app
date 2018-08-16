@@ -34,6 +34,7 @@ app = Flask(__name__)
 nerModel = DrugNER('drug', '/models/drug/')
 
 PLACEHOLDER_TEXT = '''LABA, such as vilanterol, one of the active ingredients in BREO ELLIPTA, increase the risk of asthma-related death. Currently available data are inadequate to determine whether concurrent use of inhaled corticosteroids or other long-term asthma control drugs mitigates the increased risk of asthma-related death from LABA. Available data from controlled clinical trials suggest that LABA increase the risk of asthma-related hospitalization in pediatric and adolescent patients. Data from a large placebo-controlled US trial that compared the safety of another LABA (salmeterol) or placebo added to usual asthma therapy showed an increase in asthma-related deaths in subjects receiving salmeterol.  [See Warnings and Precautions (5.1).]'''
+PLACEHOLDER_RESPONSE = {'entities': [{'text': 'death', 'start_char': 109, 'end_char': 114, 'label': 'AdverseReaction'}, {'text': 'corticosteroids', 'start_char': 203, 'end_char': 218, 'label': 'DrugClass'}, {'text': 'death', 'start_char': 306, 'end_char': 311, 'label': 'AdverseReaction'}, {'text': 'LABA', 'start_char': 317, 'end_char': 321, 'label': 'DrugClass'}, {'text': 'LABA', 'start_char': 560, 'end_char': 564, 'label': 'DrugClass'}, {'text': 'deaths', 'start_char': 656, 'end_char': 662, 'label': 'AdverseReaction'}]}
 
 def _base64_decode(encoded_str):
     # Add paddings manually if necessary.
@@ -42,9 +43,23 @@ def _base64_decode(encoded_str):
         encoded_str += b'=' * num_missed_paddings
     return base64.b64decode(encoded_str).decode('utf-8')
 
-@app.route('/')
+@app.route('/', methods=['POST', 'GET'])
 def index():
-    return render_template('index.html', input=PLACEHOLDER_TEXT)
+
+    """Identify FDA adverse events from text"""
+    # TODO: change variable scops in conditionals
+    input_text = request.form.get('text')
+    if (input_text is None):
+        response = None
+        text = PLACEHOLDER_TEXT
+    elif (input_text == PLACEHOLDER_TEXT):
+        response = PLACEHOLDER_RESPONSE
+        text = input_text
+    else:
+        response = nerModel.evaluate(input_text)
+        text = input_text
+
+    return render_template('index.html', entities=response, input=text)
 
 @app.route('/echo', methods=['POST'])
 def echo():
@@ -56,7 +71,14 @@ def echo():
 def ner():
     """Identify FDA adverse events from text"""
     text = request.form.get('text')
-    response = nerModel.evaluate(text)
+
+    def get_response(text):
+        if (text == PLACEHOLDER_TEXT):
+            return PLACEHOLDER_RESPONSE;
+        else:
+            return nerModel.evaluate(text)
+
+    response = get_response(text)
 
     return render_template('index.html', entities=response, input=text)
 
@@ -82,4 +104,4 @@ def unexpected_error(e):
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)

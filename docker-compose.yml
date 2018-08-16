@@ -9,6 +9,6 @@ services:
     hostname: app
     ports:
       - 8085:8080
-    #volumes:
-      #- ./:/app
-    entrypoint: /bin/bash -c "gunicorn --reload -b :8080 main:app && echo test && tail /dev/null"
+    volumes:
+      - ./:/app
+    entrypoint: /bin/bash -c "python3 main.py && tail /dev/null"
