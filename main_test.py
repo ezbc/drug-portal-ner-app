@@ -20,7 +20,6 @@ import pytest
 
 import main
 
-
 @pytest.fixture
 def client(monkeypatch):
     monkeypatch.chdir(os.path.dirname(main.__file__))
@@ -28,19 +27,51 @@ def client(monkeypatch):
     client = main.app.test_client()
     return client
 
+class Request:
 
-def test_echo(client):
-    r = client.post(
-        '/echo',
-        data='{"message": "Hello"}',
-        headers={
-            'Content-Type': 'application/json'
-        })
+    def __init__(self, method, form):
+        self.method = method
+        self.form = form
 
-    assert r.status_code == 200
-    data = json.loads(r.data.decode('utf-8'))
-    assert data['message'] == 'Hello'
+def test__get_entities_from_text_expecting_none():
 
+    request = Request('GET', {})
+
+    entities, text = main._get_entities_from_text(request)
+
+    assert text == main.PLACEHOLDER_TEXT
+
+    assert entities == None
+
+
+def test__annotate_text_expecting_entities():
+
+    text = '''Beta-adrenergic agonist medicines may produce significant hypokalemia in some patients,'''
+
+    annotations = [{'text': 'may', 'start_char': 34, 'end_char': 37, 'label': 'Factor'}, {'text': 'significant', 'start_char': 46, 'end_char': 57, 'label': 'Severity'}, {'text': 'hypokalemia', 'start_char': 58, 'end_char': 69, 'label': 'AdverseReaction'}]
+
+
+    annotated_text_actual = main._annotate_text(annotations, text)
+
+
+    annotated_text_expected = [{'text': 'Beta-adrenergic agonist medicines ', 'label': None, 'class': None}, {'text': 'may', 'label': 'Factor', 'class': 'factor'}, {'text': ' produce ', 'label': None, 'class': None}, {'text': 'significant', 'label': 'Severity', 'class': 'severity'}, {'text': ' ', 'label': None, 'class': None}, {'text': 'hypokalemia', 'label': 'AdverseReaction', 'class': 'adversereaction'}, {'text': ' in some patients,', 'label': None, 'class': None}]
+
+    assert annotated_text_actual == annotated_text_expected
+
+def test__annotate_text_expecting_no_entities():
+
+    text = '''Beta-adrenergic agonist medicines may produce significant hypokalemia in some patients,'''
+
+    annotations = []
+
+    annotated_text_actual = main._annotate_text(annotations, text)
+
+    annotated_text_expected = [{'text': 'Beta-adrenergic agonist medicines may produce significant hypokalemia in some patients,', 'label': None, 'class': None}]
+
+    assert annotated_text_actual == annotated_text_expected
+
+
+'''
 def test_ner(client):
     r = client.post(
         '/ner',
@@ -53,3 +84,4 @@ def test_ner(client):
     data = json.loads(r.data.decode('utf-8'))
     print(data)
     assert data['text'] == 'drug'
+'''
