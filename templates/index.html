@@ -56,8 +56,8 @@
         }
 
         .highlight-severity {
-          background-color: rgba(0,255,0,.1);
-          border-color: rgba(0,255,0,.5);
+          background-color: rgba(100,100,0,.1);
+          border-color: rgba(100,100,0,.5);
         }
         .highlight-factor {
           background-color: rgba(255,255,0,.1);
@@ -66,6 +66,15 @@
         .highlight-negation {
           background-color: rgba(0,255,255,.1);
           border-color: rgba(0,255,255,.5);
+        }
+
+        .center-column {
+          max-width: 600px;
+        }
+
+        .submit-box {
+          max-width: 600px;
+          text-align: center;
         }
     </style>
 
@@ -97,34 +106,16 @@
     </nav>
 
     <div>
-    <div class="container">
+    <div class="container center-column">
 
       <div class="starter-template">
         <h1>Drug Adverse Event Named Entity Recognition</h1>
 
-        <p class="lead">Drug adverse events are side effects experienced by a
-        consumer of a drug. Healthcare professionals, consumers and
-        manufacturers submit reports to the FDA or drug manufacturer as
-        unstructured notes when a drug consumer is experiencing complications
-        from one or more drugs. The drug manufacturer must then code the
-        report for side effects. The drug manufacturer may then update the
-        drug product label for consumer use.
-
-	        <br/>
-	        <br/>
-					This demo uses an entity extraction model trained with the Python spacy library to reduce the time spent manufacturers code adverse event reports. For more details visit this blog post describing the app
-	        <br/>
-          <div class="text-center">  
-  	        <button class="btn btn-primary" onclick="window.location.href='https://ezbc.me/2018/08/07/drug-adverse-event-entity-extraction'">Visit Blog Post</button>
-          </div>
-        </p>
-				</div>
-
         <div class="text-center">
-  				<h2>Submit your adverse event description here</h2>
+          <p>Submit your adverse event description here. Your text will be processed automatically for relevant entities. Any tags found in the text will be highlighted in the results below.
   				<form method="post" action="/" >
 
-  					<textarea name="text" rows="20" cols="100" wrap="soft" maxlength="2000">{{ input }}</textarea>
+  					<textarea name="text" rows="10" cols="70" wrap="soft" maxlength="2000">{{ input }}</textarea>
   					<br/>
   				  <input class="btn btn-primary" type="submit" name="submit" value="Submit">
   				</form>
@@ -135,6 +126,25 @@
   				<!-- [END form] -->
   	      </div>
           <br/>
+
+          <h2>Background</h2>
+          <p class="lead">Drug adverse events are side effects experienced by a
+          consumer of a drug. Healthcare professionals, consumers and
+          manufacturers submit reports to the FDA or drug manufacturer as
+          unstructured notes when a drug consumer is experiencing complications
+          from one or more drugs. The drug manufacturer must then code the
+          report for side effects. The drug manufacturer may then update the
+          drug product label for consumer use.
+
+          <br/>
+          <br/>
+          This demo uses an entity extraction model trained with the Python spacy library to reduce the time spent manufacturers code adverse event reports. For more details visit this blog post describing the app
+          <br/>
+          <div class="text-center">  
+            <button class="btn btn-primary" onclick="window.location.href='https://ezbc.me/2018/08/07/drug-adverse-event-entity-extraction'">Visit Blog Post</button>
+          </div>
+        </p>
+        </div>
 
     </div><!-- /.container -->
   </div>

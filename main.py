@@ -33,21 +33,13 @@ app = Flask(__name__)
 # Load model 
 nerModel = DrugNER('drug', '/models/drug/')
 
-PLACEHOLDER_TEXT = '''LABA, such as vilanterol, one of the active ingredients in BREO ELLIPTA, increase the risk of asthma-related death. Currently available data are inadequate to determine whether concurrent use of inhaled corticosteroids or other long-term asthma control drugs mitigates the increased risk of asthma-related death from LABA. Available data from controlled clinical trials suggest that LABA increase the risk of asthma-related hospitalization in pediatric and adolescent patients. Data from a large placebo-controlled US trial that compared the safety of another LABA (salmeterol) or placebo added to usual asthma therapy showed an increase in asthma-related deaths in subjects receiving salmeterol.  [See Warnings and Precautions (5.1).]'''
-PLACEHOLDER_RESPONSE = {'entities': [{'text': 'death', 'start_char': 109, 'end_char': 114, 'label': 'AdverseReaction'}, {'text': 'corticosteroids', 'start_char': 203, 'end_char': 218, 'label': 'DrugClass'}, {'text': 'death', 'start_char': 306, 'end_char': 311, 'label': 'AdverseReaction'}, {'text': 'LABA', 'start_char': 317, 'end_char': 321, 'label': 'DrugClass'}, {'text': 'LABA', 'start_char': 560, 'end_char': 564, 'label': 'DrugClass'}, {'text': 'deaths', 'start_char': 656, 'end_char': 662, 'label': 'AdverseReaction'}]}
+PLACEHOLDER_TEXT = '''Beta-adrenergic agonist medicines may produce significant hypokalemia in some patients, possibly through intracellular shunting, which has the potential to produce adverse cardiovascular effects. The decrease in serum potassium is usually transient, not requiring supplementation. Beta-agonist medications may produce transient hyperglycemia in some patients. In clinical trials evaluating BREO ELLIPTA in subjects with COPD or asthma, there was no evidence of a treatment effect on serum glucose or potassium.'''
 
-def _base64_decode(encoded_str):
-    # Add paddings manually if necessary.
-    num_missed_paddings = 4 - len(encoded_str) % 4
-    if num_missed_paddings != 4:
-        encoded_str += b'=' * num_missed_paddings
-    return base64.b64decode(encoded_str).decode('utf-8')
+PLACEHOLDER_RESPONSE ={'entities': [{'text': 'may', 'start_char': 34, 'end_char': 37, 'label': 'Factor'}, {'text': 'significant', 'start_char': 46, 'end_char': 57, 'label': 'Severity'}, {'text': 'hypokalemia', 'start_char': 58, 'end_char': 69, 'label': 'AdverseReaction'}, {'text': 'decrease in serum potassium', 'start_char': 200, 'end_char': 227, 'label': 'AdverseReaction'}, {'text': 'Beta-agonist medications', 'start_char': 281, 'end_char': 305, 'label': 'DrugClass'}, {'text': 'may', 'start_char': 306, 'end_char': 309, 'label': 'Factor'}, {'text': 'transient', 'start_char': 318, 'end_char': 327, 'label': 'Severity'}, {'text': 'hyperglycemia', 'start_char': 328, 'end_char': 341, 'label': 'AdverseReaction'}, {'text': 'potassium', 'start_char': 500, 'end_char': 509, 'label': 'AdverseReaction'}]} 
 
-@app.route('/', methods=['POST', 'GET'])
-def index():
 
-    """Identify FDA adverse events from text"""
-    # TODO: change variable scops in conditionals
+def _get_entities_from_text(request):
+
     if request.method == 'POST':
         input_text = request.form.get('text')
         if input_text == PLACEHOLDER_TEXT:
@@ -60,89 +52,83 @@ def index():
         entities = None
         text = PLACEHOLDER_TEXT
 
-
-    # {'entities': [{'text': 'death', 'start_char': 109,
-    #  'end_char': 114, 'label': 'AdverseReaction'}]}
-    '''
-drug-portal-ner | {'text': 'death', 'start_char': 109, 'end_char': 114, 'label': 'AdverseReaction'}
-drug-portal-ner | {'text': 'corticosteroids', 'start_char': 203, 'end_char': 218, 'label': 'DrugClass'}
-drug-portal-ner | {'text': 'death', 'start_char': 306, 'end_char': 311, 'label': 'AdverseReaction'}
-drug-portal-ner | {'text': 'LABA', 'start_char': 317, 'end_char': 321, 'label': 'DrugClass'}
-drug-portal-ner | {'text': 'LABA', 'start_char': 560, 'end_char': 564, 'label': 'DrugClass'}
-drug-portal-ner | {'text': 'deaths', 'start_char': 656, 'end_char': 662, 'label': 'AdverseReaction'}
-drug-portal-ner | [[109 114]
-drug-portal-ner |  [203 218]
-drug-portal-ner |  [306 311]
-drug-portal-ner |  [317 321]
-drug-portal-ner |  [560 564]
-drug-portal-ner |  [656 662]]
-    '''
-
-    def annotate_text(annotations, text):
-        response = {}
-
-        locs = np.empty((len(annotations), 2), dtype=np.int16)
-        for i, annotation in enumerate(annotations):
-            print(annotation)
-            locs[i, :] = (annotation['start_char'], annotation['end_char'])
-        locs = np.sort(locs, axis=0)
-
-        annotations.sort(key=lambda x: x['start_char'])
-        print(annotations)
-
-        def build_annotation_block(text, label):
-            if label is not None:
-                text_class = label.lower().replace(" ", "")
-            else:
-                text_class = None
-            return {'text': text, 'label': label, 'class': text_class}
+    return entities, text
 
 
-        # initialize
-        annotated_text = []
-        text_block = ''
-        annotating = False
-        annotated_loc = 0
-        for i, char in enumerate(text):
-            if locs.shape[0] > 0  and i >= locs[annotated_loc, 0] and i <= locs[annotated_loc, 1]:
-                # if we should continue annotating add the character
-                if i == locs[annotated_loc, 1]:
-                    # finished label, add text block
-                    block = build_annotation_block(text_block, annotations[annotated_loc]['label'])
-                    annotated_text.append(block)
-                    annotating = False
-                    text_block = ''
-                    text_block += char
-                    if (annotated_loc < locs.shape[0] - 1):
-                        annotated_loc += 1
-                elif i == locs[annotated_loc, 0]:
-                    # starting label, add text block
-                    block = build_annotation_block(text_block, None)
-                    annotated_text.append(block)
-                    text_block = ''
-                    text_block += char
-                else:
-                    annotating = True
-                    text_block += char
-            else:
+def _annotate_text(annotations, text):
+
+    locs = np.empty((len(annotations), 2), dtype=np.int16)
+    for i, annotation in enumerate(annotations):
+        locs[i, :] = (annotation['start_char'], annotation['end_char'])
+    locs = np.sort(locs, axis=0)
+
+    annotations.sort(key=lambda x: x['start_char'])
+
+    def build_annotation_block(text, label):
+        if label is not None:
+            text_class = label.lower().replace(" ", "")
+        else:
+            text_class = None
+        return {'text': text, 'label': label, 'class': text_class}
+
+    # initialize
+    annotated_text = []
+    text_block = ''
+    annotating = False
+    annotated_loc = 0
+    for i, char in enumerate(text):
+        if locs.shape[0] > 0  and i >= locs[annotated_loc, 0] and i <= locs[annotated_loc, 1]:
+            # if we should continue annotating add the character
+            if i == locs[annotated_loc, 1]:
+                # finished label, add text block
+                block = build_annotation_block(text_block, annotations[annotated_loc]['label'])
+                annotated_text.append(block)
+                annotating = False
+                text_block = ''
                 text_block += char
+                if (annotated_loc < locs.shape[0] - 1):
+                    annotated_loc += 1
+            elif i == locs[annotated_loc, 0]:
+                # starting label, add text block
+                block = build_annotation_block(text_block, None)
+                annotated_text.append(block)
+                text_block = ''
+                text_block += char
+            else:
+                annotating = True
+                text_block += char
+        else:
+            text_block += char
+            if i == len(text) - 1:
+                block = build_annotation_block(text_block, None)
+                annotated_text.append(block)
 
-        return annotated_text
+    return annotated_text
 
-    annotated_text = annotate_text(entities['entities'], text)
 
-    print(annotated_text)
+def _base64_decode(encoded_str):
+    # Add paddings manually if necessary.
+    num_missed_paddings = 4 - len(encoded_str) % 4
+    if num_missed_paddings != 4:
+        encoded_str += b'=' * num_missed_paddings
+    return base64.b64decode(encoded_str).decode('utf-8')
 
+
+@app.route('/', methods=['POST', 'GET'])
+def index():
+
+    """Identify FDA adverse events from text"""
+    # TODO: change variable scops in conditionals
+    entities, text = _get_entities_from_text(request)
+
+    annotated_text = None
+    if entities is not None:
+        annotated_text = _annotate_text(entities['entities'], text)
 
     return render_template('index.html',
-            input=text,
-            annotated_text=annotated_text)
+                           input=text,
+                           annotated_text=annotated_text)
 
-@app.route('/echo', methods=['POST'])
-def echo():
-    """Simple echo service."""
-    message = request.get_json().get('message', '')
-    return jsonify({'message': message})
 
 @app.route('/ner/drug', methods=['POST'])
 def ner():
@@ -151,13 +137,14 @@ def ner():
 
     def get_response(text):
         if (text == PLACEHOLDER_TEXT):
-            return PLACEHOLDER_RESPONSE;
+            return PLACEHOLDER_RESPONSE
         else:
             return nerModel.evaluate(text)
 
     response = get_response(text)
 
     return render_template('index.html', entities=response, input=text)
+
 
 @app.route('/ner/drug.json', methods=['POST'])
 def nerJson():
