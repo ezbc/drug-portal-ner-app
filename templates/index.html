@@ -158,9 +158,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 
     <script>
-      $(function () {
-        $('[data-toggle="popover"]').popover()
-      })
+      var _popoverLink = $('[data-toggle="popover"]');
+      _popoverLink.on('click', function(){
+        _popoverLink.popover('destroy').popover({container: 'body'});
+        $(this).popover('show');
+      });
     </script>
 
   </body>
