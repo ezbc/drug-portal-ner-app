@@ -12,4 +12,3 @@ services:
     volumes:
       - ./:/app
     entrypoint: /bin/bash -c "python3 main.py && tail /dev/null"
-    #entrypoint: /bin/bash -c "gunicorn -b :8080 main:app"
